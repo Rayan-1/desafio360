@@ -1,13 +1,16 @@
 {
-    "name": "docker-node-app",
-    "version": "1.0.0",
-    "description": "A simple Node.js app in a Docker container",
-    "main": "app.js",
-    "scripts": {
-      "start": "node app.js"
-    },
-    "author": "Seu Nome",
-    "license": "MIT",
-    "dependencies": {}
+  "name": "docker-node-app",
+  "version": "1.0.0",
+  "description": "A simple Node.js app in a Docker container",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "build": "npm run build"
+  },
+  "author": "Seu Nome",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1", 
+    "body-parser": "^1.19.0"
   }
-  
+}
