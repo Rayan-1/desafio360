@@ -2,8 +2,33 @@ trigger:
 - main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
 
 steps:
-- script: echo "Hello, Azure Pipelines!"
-  displayName: 'Mensagem de Exemplo'
+- script: dotnet restore
+  displayName: 'Restaurar Pacotes'
+
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: 'Compilar'
+
+- script: dotnet test --configuration $(buildConfiguration) --logger trx
+  displayName: 'Executar Testes'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: true
+    modifyOutputPath: false
+  displayName: 'Publicar Aplicação'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: 'drop'
+    publishLocation: 'Container'
+  displayName: 'Publicar Artefatos de Build'
