@@ -2,7 +2,7 @@ trigger:
 - main
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 variables:
   buildConfiguration: 'Release'
@@ -16,6 +16,11 @@ steps:
 
 - script: dotnet test --configuration $(buildConfiguration) --logger trx
   displayName: 'Executar Testes'
+
+- script: |
+    # Seu script Shell (Bash) aqui
+    echo "Este é um exemplo de script Shell"
+  displayName: 'Executar Script Shell'
 
 - task: DotNetCoreCLI@2
   inputs:
