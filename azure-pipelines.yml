@@ -5,7 +5,18 @@ pool:
   vmImage: 'ubuntu-latest'
 
 jobs:
-- job: HelloWorldJob
+- job: DockerDownloadJob
   steps:
-  - script: echo 'Olá, Mundo!'
-    displayName: 'Exibir mensagem'
+  - script: |
+      # Atualize os pacotes do sistema
+      sudo apt-get update
+      
+      # Instale o Docker
+      sudo apt-get install -y docker.io
+      
+      # Inicie o serviço do Docker
+      sudo service docker start
+      
+      # Adicione seu usuário ao grupo Docker para evitar usar sudo
+      sudo usermod -aG docker $(whoami)
+    displayName: 'Instalar Docker'
