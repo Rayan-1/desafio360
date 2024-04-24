@@ -4,10 +4,10 @@ FROM python:3.9-slim
 # Define o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
-# Copia os arquivos do diretório atual para o diretório de trabalho no contêiner
+# Copie os arquivos do diretório atual para o diretório de trabalho no contêiner
 COPY . .
 
-# Instala as dependências Python
+# Instale as dependências Python
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Exponha a porta em que a sua aplicação Flask está sendo executada
