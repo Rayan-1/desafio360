@@ -1,0 +1,25 @@
+version: '3'
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - jenkinsnet
+
+  agent:
+    image: docker:latest
+    networks:
+      - jenkinsnet
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: ["docker", "daemon", "-H", "tcp://host.docker.internal:2375"]
+
+volumes:
+  jenkins_home:
+
+networks:
+  jenkinsnet:
