@@ -14,7 +14,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout do repositório
-                git 'https://github.com/python019/django_crm.git'
+                git 'https://github.com/Rayan-1/desafio360.git'
             }
         }
         
