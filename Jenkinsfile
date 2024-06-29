@@ -10,7 +10,7 @@ pipeline {
     }
 
     triggers {
-        pollSCM '* /1 * * * *'  // Poll SCM for changes every minute
+        pollSCM '* * * * *'  // Poll SCM for changes every minute
     }
 
     stages {
