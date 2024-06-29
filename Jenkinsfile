@@ -2,57 +2,22 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_CREDENTIALS_ID = 'sonarqube-credentials'
+        SONARQUBE_CREDENTIALS_ID = 'sonarcloud-credentials'
         DOCKER_CREDENTIALS_ID = 'docker-credentials'
         KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-credentials'
         GIT_CREDENTIALS_ID = 'git-credentials-id'
     }
 
-    triggers {
-        githubPush() // Trigger para disparar o pipeline em push
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                checkout([
-                    $class: 'GitSCM', 
-                    branches: [[name: '*/develop']], 
-                    doGenerateSubmoduleConfigurations: false, 
-                    extensions: [], 
-                    userRemoteConfigs: [[
-                        credentialsId: "${GIT_CREDENTIALS_ID}", 
-                        url: 'https://github.com/Rayan-1/desafio360.git'
-                    ]]
-                ])
+                checkout scm
             }
         }
 
         stage('Build') {
             steps {
-                script {
-                    echo 'Building...'
-                    // Adicione seus passos de build aqui
-                }
-            }
-        }
-
-        stage('Docker Login') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
-                }
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
-                        def image = docker.build('your-image-name:latest')
-                        image.push('latest')
-                    }
-                }
+                sh 'mvn clean package'
             }
         }
 
@@ -62,9 +27,15 @@ pipeline {
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: "${SONARQUBE_CREDENTIALS_ID}", passwordVariable: 'SONARQUBE_PASSWORD', usernameVariable: 'SONARQUBE_USERNAME')]) {
-                    script {
-                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.login=${SONARQUBE_USERNAME} -Dsonar.password=${SONARQUBE_PASSWORD}"
-                    }
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${SONARQUBE_USERNAME}"
+                }
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
                 }
             }
         }
@@ -79,6 +50,9 @@ pipeline {
     }
 
     post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
         failure {
             echo 'Pipeline failed!'
         }
