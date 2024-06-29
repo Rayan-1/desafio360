@@ -3,8 +3,7 @@ pipeline {
 
     environment {
         DOCKER_REGISTRY = 'docker.io'  // Registry where your Docker images will be pushed
-        DOCKERHUB_USERNAME = credentials('docker-credentials').username
-        DOCKERHUB_PASSWORD = credentials('docker-credentials').password
+        DOCKERHUB_TOKEN = credentials('docker-credentials').password
         KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-credentials'
         SONARQUBE_CREDENTIALS_ID = 'sonarqube-credentials'
     }
@@ -32,7 +31,7 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 script {
-                    docker.withRegistry("$DOCKER_REGISTRY", "${DOCKERHUB_USERNAME}:${DOCKERHUB_PASSWORD}") {
+                    docker.withRegistry("", "", DOCKERHUB_TOKEN) {
                         def customImage = docker.build("your-docker-image-name")
                         customImage.push('latest')
                     }
