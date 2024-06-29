@@ -2,78 +2,46 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_CREDENTIALS_ID = 'sonarqube-credentials'
-        DOCKER_CREDENTIALS_ID = 'docker-credentials'
-        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-credentials'
-        GIT_CREDENTIALS_ID = 'git-credentials-id'
+        SONARQUBE_CREDENTIALS_ID = 'sonarqube-credentials'  // ID das credenciais do SonarQube armazenadas no Jenkins
+        DOCKER_CREDENTIALS_ID = 'docker-credentials'  // ID das credenciais do Docker armazenadas no Jenkins
+        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-credentials'  // ID das credenciais do kubeconfig armazenadas no Jenkins
+        GIT_CREDENTIALS_ID = 'git-credentials-id' // ID das credenciais do Git armazenadas no Jenkins
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout([
-                    $class: 'GitSCM', 
-                    branches: [[name: '*/develop']], 
-                    doGenerateSubmoduleConfigurations: false, 
-                    extensions: [], 
-                    userRemoteConfigs: [[
-                        credentialsId: "${GIT_CREDENTIALS_ID}", 
-                        url: 'https://github.com/Rayan-1/desafio360.git'
-                    ]]
-                ])
+                git credentialsId: "${GIT_CREDENTIALS_ID}", url: 'https://github.com/Rayan-1/desafio360.git', branch: 'develop'
             }
         }
-
         stage('Build') {
             steps {
-                // Adicionar os passos de build
                 script {
-                    echo 'Building...'
-                }
-            }
-        }
-
-        stage('Docker Login') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
-                }
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
-                        def image = docker.build('your-image-name')
-                        image.push('latest')
+                    withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        // Build steps go here, e.g., Docker login and build
                     }
                 }
             }
         }
-
         stage('SonarQube Analysis') {
-            environment {
-                scannerHome = tool 'SonarQubeScanner'
-            }
             steps {
-                withCredentials([usernamePassword(credentialsId: "${SONARQUBE_CREDENTIALS_ID}", passwordVariable: 'SONARQUBE_PASSWORD', usernameVariable: 'SONARQUBE_USERNAME')]) {
-                    script {
-                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.login=${SONARQUBE_USERNAME} -Dsonar.password=${SONARQUBE_PASSWORD}"
+                script {
+                    withSonarQubeEnv(credentialsId: "${SONARQUBE_CREDENTIALS_ID}") {
+                        // Run SonarQube analysis here
                     }
                 }
             }
         }
-
-        stage('Deploy to Kubernetes') {
+        stage('Deploy') {
             steps {
-                withCredentials([file(credentialsId: "${KUBECONFIG_CREDENTIALS_ID}", variable: 'KUBECONFIG')]) {
-                    sh 'kubectl apply -f k8s/deployment.yaml'
+                script {
+                    withCredentials([usernamePassword(credentialsId: "${KUBECONFIG_CREDENTIALS_ID}", passwordVariable: 'KUBECONFIG_PASSWORD', usernameVariable: 'KUBECONFIG_USERNAME')]) {
+                        // Deployment steps go here
+                    }
                 }
             }
         }
     }
-
     post {
         failure {
             echo 'Pipeline failed!'
