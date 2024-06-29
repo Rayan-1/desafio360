@@ -2,46 +2,82 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_CREDENTIALS_ID = 'sonarqube-credentials'  // ID das credenciais do SonarQube armazenadas no Jenkins
-        DOCKER_CREDENTIALS_ID = 'docker-credentials'  // ID das credenciais do Docker armazenadas no Jenkins
-        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-credentials'  // ID das credenciais do kubeconfig armazenadas no Jenkins
-        GIT_CREDENTIALS_ID = 'git-credentials-id' // ID das credenciais do Git armazenadas no Jenkins
+        SONARQUBE_CREDENTIALS_ID = 'sonarqube-credentials'
+        DOCKER_CREDENTIALS_ID = 'docker-credentials'
+        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-credentials'
+        GIT_CREDENTIALS_ID = 'git-credentials-id'
+    }
+
+    triggers {
+        githubPush() // Trigger para disparar o pipeline em push
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: "${GIT_CREDENTIALS_ID}", url: 'https://github.com/Rayan-1/desafio360.git', branch: 'develop'
+                checkout([
+                    $class: 'GitSCM', 
+                    branches: [[name: '*/develop']], 
+                    doGenerateSubmoduleConfigurations: false, 
+                    extensions: [], 
+                    userRemoteConfigs: [[
+                        credentialsId: "${GIT_CREDENTIALS_ID}", 
+                        url: 'https://github.com/Rayan-1/desafio360.git'
+                    ]]
+                ])
             }
         }
+
         stage('Build') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                        // Build steps go here, e.g., Docker login and build
+                    echo 'Building...'
+                    // Adicione seus passos de build aqui
+                }
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
+                        def image = docker.build('your-image-name:latest')
+                        image.push('latest')
                     }
                 }
             }
         }
+
         stage('SonarQube Analysis') {
+            environment {
+                scannerHome = tool 'SonarQubeScanner'
+            }
             steps {
-                script {
-                    withSonarQubeEnv(credentialsId: "${SONARQUBE_CREDENTIALS_ID}") {
-                        // Run SonarQube analysis here
+                withCredentials([usernamePassword(credentialsId: "${SONARQUBE_CREDENTIALS_ID}", passwordVariable: 'SONARQUBE_PASSWORD', usernameVariable: 'SONARQUBE_USERNAME')]) {
+                    script {
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.login=${SONARQUBE_USERNAME} -Dsonar.password=${SONARQUBE_PASSWORD}"
                     }
                 }
             }
         }
-        stage('Deploy') {
+
+        stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: "${KUBECONFIG_CREDENTIALS_ID}", passwordVariable: 'KUBECONFIG_PASSWORD', usernameVariable: 'KUBECONFIG_USERNAME')]) {
-                        // Deployment steps go here
-                    }
+                withCredentials([file(credentialsId: "${KUBECONFIG_CREDENTIALS_ID}", variable: 'KUBECONFIG')]) {
+                    sh 'kubectl apply -f k8s/deployment.yaml'
                 }
             }
         }
     }
+
     post {
         failure {
             echo 'Pipeline failed!'
