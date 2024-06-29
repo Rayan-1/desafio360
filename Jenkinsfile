@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_REGISTRY = 'docker.io'  // Registry where your Docker images will be pushed
-        DOCKERHUB_TOKEN = credentials('docker-credentials').password
+        DOCKERHUB_TOKEN = 'docker-credentials'
         KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-credentials'
         SONARQUBE_CREDENTIALS_ID = 'sonarqube-credentials'
     }
