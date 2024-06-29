@@ -2,10 +2,15 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_CREDENTIALS_ID = 'sonarqube-credentials'
-        DOCKER_CREDENTIALS_ID = 'docker-credentials'
+        DOCKER_REGISTRY = 'docker.io'  // Registry where your Docker images will be pushed
+        DOCKERHUB_USERNAME = credentials('docker-credentials').username
+        DOCKERHUB_PASSWORD = credentials('docker-credentials').password
         KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-credentials'
-        GIT_CREDENTIALS_ID = 'git-credentials-id'
+        SONARQUBE_CREDENTIALS_ID = 'sonarqube-credentials'
+    }
+
+    triggers {
+        pollSCM '* /1 * * * *'  // Poll SCM for changes every minute
     }
 
     stages {
@@ -17,14 +22,20 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean package'
+                script {
+                    def mvnHome = tool 'Maven'
+                    sh "${mvnHome}/bin/mvn clean package"
+                }
             }
         }
 
-        stage('Docker Login') {
+        stage('Docker Build & Push') {
             steps {
-                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                script {
+                    docker.withRegistry("$DOCKER_REGISTRY", "${DOCKERHUB_USERNAME}:${DOCKERHUB_PASSWORD}") {
+                        def customImage = docker.build("your-docker-image-name")
+                        customImage.push('latest')
+                    }
                 }
             }
         }
