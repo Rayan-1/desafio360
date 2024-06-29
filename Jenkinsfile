@@ -22,38 +22,20 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    def mvnHome = tool 'Maven'
-                    sh "${mvnHome}/bin/mvn clean package"
-                }
-            }
-        }
-
-        stage('Docker Build & Push') {
-            steps {
-                script {
+                    // Build Nginx Docker image
                     docker.withRegistry("", "", DOCKERHUB_TOKEN) {
-                        def customImage = docker.build("your-docker-image-name")
-                        customImage.push('latest')
+                        def nginxImage = docker.build("nginx")
+                        nginxImage.push('latest')
                     }
-                }
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            environment {
-                scannerHome = tool 'SonarQubeScanner'
-            }
-            steps {
-                withCredentials([usernamePassword(credentialsId: "${SONARQUBE_CREDENTIALS_ID}", passwordVariable: 'SONARQUBE_PASSWORD', usernameVariable: 'SONARQUBE_USERNAME')]) {
-                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.login=${SONARQUBE_USERNAME} -Dsonar.password=${SONARQUBE_PASSWORD}"
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
+                // Deploy Nginx to Kubernetes
                 withCredentials([file(credentialsId: "${KUBECONFIG_CREDENTIALS_ID}", variable: 'KUBECONFIG')]) {
-                    sh 'kubectl apply -f k8s/deployment.yaml'
+                    sh 'kubectl apply -f k8s/nginx-deployment.yaml'
                 }
             }
         }
