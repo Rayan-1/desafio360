@@ -1,52 +1,61 @@
 pipeline {
     agent any
-
-    environment {
-        DOCKER_REGISTRY = 'docker.io'  // Registry where your Docker images will be pushed
-        DOCKERHUB_TOKEN = 'docker-credentials'
-        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-credentials'
-        SONARQUBE_CREDENTIALS_ID = 'sonarqube-credentials'
-    }
-
+    
     triggers {
-        pollSCM '* * * * *'  // Poll SCM for changes every minute
+        // Trigger the pipeline on any changes to the specified branches
+        githubPush()
     }
-
+    
+    environment {
+        // Define environment variables for Docker and Kubernetes
+        DOCKER_IMAGE = "your-docker-image-name"
+        KUBE_CONFIG = credentials('kubeconfig-credentials')
+    }
+    
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                // Checkout the source code from GitHub
+                git credentialsId: 'git-credentials-id', url: 'https://github.com/your/repository.git'
             }
         }
-
+        
         stage('Build') {
             steps {
+                // Build your Django application
+                sh 'python manage.py migrate'
+                sh 'python manage.py collectstatic --noinput'
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                // Build Docker image and push to Docker registry
                 script {
-                    // Build Nginx Docker image
-                    docker.withRegistry("", "", DOCKERHUB_TOKEN) {
-                        def nginxImage = docker.build("nginx")
-                        nginxImage.push('latest')
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker-credentials') {
+                        def customImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                        customImage.push()
                     }
                 }
             }
         }
-
-        stage('Deploy to Kubernetes') {
+        
+        stage('Deploy to Kind Kubernetes') {
             steps {
-                // Deploy Nginx to Kubernetes
-                withCredentials([file(credentialsId: "${KUBECONFIG_CREDENTIALS_ID}", variable: 'KUBECONFIG')]) {
-                    sh 'kubectl apply -f k8s/nginx-deployment.yaml'
+                // Deploy to Kubernetes cluster managed by Kind
+                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
+                    sh 'kubectl --kubeconfig=$KUBECONFIG apply -f kubernetes-manifests/'
                 }
             }
         }
     }
-
+    
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Pipeline succeeded! Deployment completed.'
         }
         failure {
-            echo 'Pipeline failed!'
+            echo 'Pipeline failed! Deployment unsuccessful.'
         }
     }
 }

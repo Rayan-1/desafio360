@@ -1,6 +1,9 @@
 from pathlib import Path
+import os
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 SECRET_KEY = 'ufpsuf=#xm*afaeaur1b8!)jdqq%jlv^fv%zn^yj=a+63)!z6z'
 
@@ -83,3 +86,7 @@ USE_TZ = True
 
 
 STATIC_URL = '/static/'
+# settings.py
+
+# Configuração para usar BigAutoField como padrão
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
