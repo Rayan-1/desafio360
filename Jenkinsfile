@@ -15,8 +15,10 @@ pipeline {
         
         stage('Build') {
             steps {
-                sh 'python manage.py migrate'
-                sh 'python manage.py collectstatic --noinput'
+                sh 'python3 ~/desafio360/desafio360/django_crm/manage.py
+ migrate'
+                sh 'python3 ~/desafio360/desafio360/django_crm/manage.py
+ collectstatic --noinput'
             }
         }
         
