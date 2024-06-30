@@ -8,7 +8,7 @@ pipeline {
     
     environment {
         // Define environment variables for Docker and Kubernetes
-        DOCKER_IMAGE = "your-docker-image-name"
+        DOCKER_IMAGE = "django_crm"
         KUBE_CONFIG = credentials('kubeconfig-credentials')
     }
     
@@ -16,7 +16,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the source code from GitHub
-                git credentialsId: 'git-credentials-id', url: 'https://github.com/your/repository.git'
+                git credentialsId: 'git-credentials-id', url: 'https://github.com/Rayan-1/desafio360.git'
             }
         }
         
