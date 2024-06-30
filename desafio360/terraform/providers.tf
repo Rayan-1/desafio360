@@ -1,7 +1,7 @@
 provider "aws" {
   region     = "us-east-1"
-  access_key = "AKIA5TMRIY2QL3Z2Y4KQ"
-  secret_key = "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"
+  access_key = ""
+  secret_key = ""
 
   endpoints {
     s3       = "http://localhost:4566"
