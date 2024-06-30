@@ -1,5 +1,12 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.9'  // Utiliza uma imagem com Python 3.9
+            registryUrl 'https://registry.hub.docker.com'
+            args '--user root'  // Permite execução com permissões de root no container
+            customWorkspace '/var/jenkins_home/workspace'
+        }
+    }
 
     environment {
         DOCKER_IMAGE = "django_crm"
@@ -9,8 +16,8 @@ pipeline {
     stages {
         stage('Install Python 3') {
             steps {
-                sh 'sudo apt update'
-                sh 'sudo apt install -y python3 python3-pip'
+                sh 'apt update'
+                sh 'apt install -y python3 python3-pip'
             }
         }
 
