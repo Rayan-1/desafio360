@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: 'git-credentials-id', url: 'https://github.com/Rayan-1/desafio360.git', branch: 'main'
+                git credentialsId: 'git-credentials-id', url: 'https://github.com/Rayan-1/desafio360.git', branch: 'develop'
             }
         }
         
