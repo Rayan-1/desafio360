@@ -12,6 +12,14 @@ pipeline {
                 git credentialsId: 'git-credentials-id', url: 'https://github.com/Rayan-1/desafio360.git', branch: 'develop'
             }
         }
+
+         stages {
+        stage('Install Python 3') {
+            steps {
+                sh 'sudo apt update'
+                sh 'sudo apt install -y python3 python3-pip'
+            }
+        }
         
         stage('Build') {
             steps {
