@@ -27,3 +27,25 @@ git push origin feature/nova-feature
 Prometheus: http://localhost:9090
 Grafana: http://localhost:3000 (usuário/senha padrão: admin/admin)
 Loki: http://localhost:3100
+
+
+Desafio 360 é um projeto que demonstra a implementação de uma aplicação completa com práticas de CI/CD. Este repositório inclui uma aplicação desenvolvida em [inserir linguagem/framework], além de configurações de pipeline de CI/CD e integração com SonarCloud para análise de qualidade de código.
+
+## Funcionalidades
+
+- Implementação de CI/CD usando [ferramenta de CI/CD].
+- Integração com SonarCloud para monitoramento da qualidade do código.
+- [Outras funcionalidades da aplicação].
+
+## Tecnologias Utilizadas
+
+- **Linguagem/Framework**: [inserir]
+- **Banco de Dados**: [inserir]
+- **CI/CD**: [inserir ferramentas]
+- **SonarCloud**: Para análise de qualidade de código.
+
+## Instalação
+
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/Rayan-1/desafio360.git
